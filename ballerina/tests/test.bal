@@ -17,7 +17,7 @@ service on new http:Listener(9090) {
 }
 
 isolated function interceptFunc(string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers) returns ModifiedRequest {
+        string? mediaType, map<string|string[]>? headers, WrapperCtxMap ctxMap) returns ModifiedRequest {
     map<string|string[]> modifiedHeaders = {"X-Test": "test"};
     if headers is map<string|string[]> {
         foreach [string, string|string[]] entry in headers.entries() {
@@ -49,7 +49,7 @@ function testGetWithInterceptor() {
         Client clientEp = check new ("http://localhost:9090", interceptFunc = interceptFunc);
         Message msg = check clientEp->get("/get", headers = {"Sample-Header": "Sample-Value"});
         test:assertEquals(msg.code, 200, "Status code should be 200");
-        test:assertEquals(msg.message, "test", "Response message should be 'Hello, World!'");
+        test:assertEquals(msg.message, "test", "Response message should be 'test'");
     } on fail error e {
         test:assertFail("Error occurred: " + e.message());
     }
@@ -61,7 +61,7 @@ function testGetWithInterceptorWithoutHeaders() {
         Client clientEp = check new ("http://localhost:9090", interceptFunc = interceptFunc);
         Message msg = check clientEp->get("/get");
         test:assertEquals(msg.code, 200, "Status code should be 200");
-        test:assertEquals(msg.message, "test", "Response message should be 'Hello, World!'");
+        test:assertEquals(msg.message, "test", "Response message should be 'test'");
     } on fail error e {
         test:assertFail("Error occurred: " + e.message());
     }
