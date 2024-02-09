@@ -8,11 +8,47 @@ public type ModifiedRequest record {|
 |};
 
 public type InterceptFunction isolated function (string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers) returns ModifiedRequest;
+        string? mediaType, map<string|string[]>? headers, WrapperCtxMap ctxMap) returns ModifiedRequest;
 
 isolated function defaultIntercept(string path, string method, http:RequestMessage message, string? mediaType,
-        map<string|string[]>? headers) returns ModifiedRequest {
+        map<string|string[]>? headers, WrapperCtxMap ctxMap) returns ModifiedRequest {
     return {message: message, headers: headers, mediaType: mediaType};
+}
+
+public type Cloneable (any & readonly)|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
+
+public type WrapperCtxObject Cloneable|isolated object {};
+
+public type WrapperCtxObjectType typedesc<WrapperCtxObject>;
+
+public isolated class WrapperCtxMap {
+    private final map<WrapperCtxObjectType> ctxMap;
+
+    public isolated function init(map<WrapperCtxObjectType> ctxMap) {
+        self.ctxMap = ctxMap.clone();
+    }
+
+    public isolated function keys() returns string[] {
+        lock {
+            return self.ctxMap.keys().clone();
+        }
+    }
+
+    public isolated function hasKey(string key) returns boolean {
+        lock {
+            return self.ctxMap.hasKey(key);
+        }
+    }
+
+    public isolated function get(string key) returns WrapperCtxObject? {
+        lock {
+            return self.ctxMap[key];
+        }
+    }
+
+    public function getWithType(string key, typedesc targetType = <>) returns targetType = @java:Method {
+        'class: "io.tharmigank.http.client.wrapper.ExternWrapperCtxMap"
+    } external;
 }
 
 public client isolated class Client {
@@ -20,10 +56,12 @@ public client isolated class Client {
 
     final http:Client httpClient;
     final InterceptFunction interceptFunc;
+    final WrapperCtxMap ctxMap;
 
-    public isolated function init(string url, InterceptFunction? interceptFunc = (), *http:ClientConfiguration config) returns ClientError? {
+    public isolated function init(string url, InterceptFunction? interceptFunc = (), WrapperCtxMap ctxMap = new ({}), *http:ClientConfiguration config) returns ClientError? {
         self.httpClient = check new (url, config);
         self.interceptFunc = interceptFunc ?: defaultIntercept;
+        self.ctxMap = ctxMap;
         return;
     }
 
@@ -41,7 +79,7 @@ public client isolated class Client {
 
     private isolated function processPost(string path, http:RequestMessage message, http:TargetType targetType,
             string? mediaType, map<string|string[]>? headers) returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "POST", message, mediaType, headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "POST", message, mediaType, headers, self.ctxMap);
         return self.httpClient->post(path, interceptResult.message, interceptResult.headers, interceptResult.mediaType, targetType);
     }
 
@@ -59,7 +97,7 @@ public client isolated class Client {
 
     private isolated function processPut(string path, http:RequestMessage message, http:TargetType targetType,
             string? mediaType, map<string|string[]>? headers) returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "PUT", message, mediaType, headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "PUT", message, mediaType, headers, self.ctxMap);
         return self.httpClient->put(path, interceptResult.message, interceptResult.headers, interceptResult.mediaType, targetType);
     }
 
@@ -77,7 +115,7 @@ public client isolated class Client {
 
     private isolated function processPatch(string path, http:RequestMessage message, http:TargetType targetType,
             string? mediaType, map<string|string[]>? headers) returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "PATCH", message, mediaType, headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "PATCH", message, mediaType, headers, self.ctxMap);
         return self.httpClient->patch(path, interceptResult.message, interceptResult.headers, interceptResult.mediaType, targetType);
     }
 
@@ -95,7 +133,7 @@ public client isolated class Client {
 
     private isolated function processDelete(string path, http:RequestMessage message, http:TargetType targetType,
             string? mediaType, map<string|string[]>? headers) returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "DELETE", message, mediaType, headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "DELETE", message, mediaType, headers, self.ctxMap);
         return self.httpClient->delete(path, interceptResult.message, interceptResult.headers, interceptResult.mediaType, targetType);
     }
 
@@ -106,7 +144,7 @@ public client isolated class Client {
     } external;
 
     remote isolated function head(string path, map<string|string[]>? headers = ()) returns http:Response|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "HEAD", (), (), headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "HEAD", (), (), headers, self.ctxMap);
         return self.httpClient->head(path, interceptResult.headers);
     }
 
@@ -123,7 +161,7 @@ public client isolated class Client {
 
     private isolated function processGet(string path, map<string|string[]>? headers, http:TargetType targetType)
             returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "GET", (), (), headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "GET", (), (), headers, self.ctxMap);
         return self.httpClient->get(path, interceptResult.headers, targetType);
     }
 
@@ -140,7 +178,7 @@ public client isolated class Client {
 
     private isolated function processOptions(string path, map<string|string[]>? headers, http:TargetType targetType)
             returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, "OPTIONS", (), (), headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, "OPTIONS", (), (), headers, self.ctxMap);
         return self.httpClient->options(path, interceptResult.headers, targetType);
     }
 
@@ -153,7 +191,7 @@ public client isolated class Client {
     private isolated function processExecute(string httpVerb, string path, http:RequestMessage message,
             http:TargetType targetType, string? mediaType, map<string|string[]>? headers)
             returns http:Response|anydata|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, httpVerb, message, mediaType, headers);
+        ModifiedRequest interceptResult = self.interceptFunc(path, httpVerb, message, mediaType, headers, self.ctxMap);
         return self.httpClient->execute(httpVerb, path, interceptResult.message, interceptResult.headers, interceptResult.mediaType, targetType);
     }
 
@@ -164,7 +202,7 @@ public client isolated class Client {
 
     private isolated function processForward(string path, http:Request request, http:TargetType targetType)
             returns http:Response|anydata|ClientError {
-        http:RequestMessage interceptResult = self.interceptFunc(path, request.method, request, (), ()).message;
+        http:RequestMessage interceptResult = self.interceptFunc(path, request.method, request, (), (), self.ctxMap).message;
         if interceptResult is http:Request {
             return self.httpClient->forward(path, interceptResult, targetType);
         }
@@ -172,7 +210,7 @@ public client isolated class Client {
     }
 
     remote isolated function submit(string httpVerb, string path, http:RequestMessage message) returns http:HttpFuture|ClientError {
-        ModifiedRequest interceptResult = self.interceptFunc(path, httpVerb, message, (), ());
+        ModifiedRequest interceptResult = self.interceptFunc(path, httpVerb, message, (), (), self.ctxMap);
         return self.httpClient->submit(httpVerb, path, interceptResult.message);
     }
 
