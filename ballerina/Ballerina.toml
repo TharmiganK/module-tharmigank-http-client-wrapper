@@ -1,0 +1,18 @@
+[package]
+org = "tharmigank"
+name = "http.client.wrapper"
+version = "0.0.1"
+authors = ["tharmigank"]
+keywords = ["http", "client", "wrapper", "interceptor"]
+repository = "https://github.com/tharmigank/module-ballerina-http-client-wrapper"
+license = ["Apache-2.0"]
+distribution = "2201.8.0"
+
+[platform.java17]
+graalvmCompatible = true
+
+[[platform.java17.dependency]]
+groupId = "io.tharmigank.http"
+artifactId = "http-client-wrapper-native"
+version = "0.0.1"
+path = "../native/build/libs/http.client.wrapper-native-0.0.1-SNAPSHOT.jar"
