@@ -1,7 +1,7 @@
 [package]
 org = "tharmigank"
 name = "http.client.wrapper"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["tharmigank"]
 keywords = ["http", "client", "wrapper", "interceptor"]
 repository = "https://github.com/TharmiganK/module-tharmigank-http-client-wrapper"
@@ -14,5 +14,5 @@ graalvmCompatible = true
 [[platform.java17.dependency]]
 groupId = "io.tharmigank.http"
 artifactId = "http-client-wrapper-native"
-version = "0.0.2"
-path = "../native/build/libs/http.client.wrapper-native-0.0.2-SNAPSHOT.jar"
+version = "0.0.3"
+path = "../native/build/libs/http.client.wrapper-native-0.0.3-SNAPSHOT.jar"
