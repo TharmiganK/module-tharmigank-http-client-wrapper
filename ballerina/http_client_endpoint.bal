@@ -15,16 +15,10 @@ isolated function defaultIntercept(string path, string method, http:RequestMessa
     return {message: message, headers: headers, mediaType: mediaType};
 }
 
-public type Cloneable (any & readonly)|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
-
-public type WrapperCtxObject Cloneable|isolated object {};
-
-public type WrapperCtxObjectType typedesc<WrapperCtxObject>;
-
 public isolated class WrapperCtxMap {
-    private final map<WrapperCtxObjectType> ctxMap;
+    private final map<anydata> ctxMap;
 
-    public isolated function init(map<WrapperCtxObjectType> ctxMap) {
+    public isolated function init(map<anydata> ctxMap) {
         self.ctxMap = ctxMap.clone();
     }
 
@@ -40,13 +34,13 @@ public isolated class WrapperCtxMap {
         }
     }
 
-    public isolated function get(string key) returns WrapperCtxObject? {
+    public isolated function get(string key) returns anydata {
         lock {
-            return self.ctxMap[key];
+            return self.ctxMap[key].clone();
         }
     }
 
-    public function getWithType(string key, typedesc targetType = <>) returns targetType = @java:Method {
+    public function getWithType(string key, typedesc<anydata> targetType = <>) returns targetType = @java:Method {
         'class: "io.tharmigank.http.client.wrapper.ExternWrapperCtxMap"
     } external;
 }
@@ -58,10 +52,10 @@ public client isolated class Client {
     final InterceptFunction interceptFunc;
     final WrapperCtxMap ctxMap;
 
-    public isolated function init(string url, InterceptFunction? interceptFunc = (), WrapperCtxMap ctxMap = new ({}), *http:ClientConfiguration config) returns ClientError? {
+    public isolated function init(string url, InterceptFunction? interceptFunc = (), map<anydata> ctxMap = {}, *http:ClientConfiguration config) returns ClientError? {
         self.httpClient = check new (url, config);
         self.interceptFunc = interceptFunc ?: defaultIntercept;
-        self.ctxMap = ctxMap;
+        self.ctxMap = new (ctxMap);
         return;
     }
 
