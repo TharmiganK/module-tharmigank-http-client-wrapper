@@ -8,13 +8,13 @@ The common function should match the following signature:
 
 ```ballerina
 public type InterceptFunction isolated function (string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers, WrapperCtxMap ctxMap) returns ModifiedRequest;
+        string? mediaType, map<string|string[]>? headers, WrapperContext ctx) returns ModifiedRequest;
 ```
 
 Example:
 ```ballerina
 wrapper:InterceptFunction interceptFunc = isolated function(string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers, wrapper:WrapperCtxMap ctxMap) returns wrapper:ModifiedRequest {
+        string? mediaType, map<string|string[]>? headers, wrapper:WrapperContext ctx) returns wrapper:ModifiedRequest {
         
     return {
         message,
@@ -56,13 +56,13 @@ The following example demonstrates how to use the wrapper client to add a common
 
 ```ballerina
 wrapper:InterceptFunction interceptFunc = isolated function(string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers, wrapper:WrapperCtxMap ctxMap) returns wrapper:ModifiedRequest {
+        string? mediaType, map<string|string[]>? headers, wrapper:WrapperContext ctx) returns wrapper:ModifiedRequest {
     
     // Print the content of the ctxMap
-    foreach string key in ctxMap.keys() {
+    foreach string key in ctx.keys() {
         // getWithType is also available on ctxMap: 
-        // string _ = check ctxMap.getWithType("key2");
-        io:println("Key: " + key + ", Value: " + ctxMap.get(key).toString());
+        // string _ = check ctx.getWithType("key2");
+        io:println("Key: " + key + ", Value: " + ctx.get(key).toString());
     }
     
     // Add a custom header
