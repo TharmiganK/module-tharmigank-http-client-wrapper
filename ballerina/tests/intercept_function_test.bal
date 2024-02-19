@@ -17,7 +17,7 @@ service on new http:Listener(9090) {
 }
 
 isolated function interceptFunc(string path, string method, http:RequestMessage message,
-        string? mediaType, map<string|string[]>? headers, WrapperCtxMap ctxMap) returns ModifiedRequest {
+        string? mediaType, map<string|string[]>? headers, WrapperContext ctx) returns ModifiedRequest|error {
     map<string|string[]> modifiedHeaders = {"X-Test": "test"};
     if headers is map<string|string[]> {
         foreach [string, string|string[]] entry in headers.entries() {
@@ -59,7 +59,7 @@ function testGetWithInterceptor() {
 function testGetWithInterceptorWithoutHeaders() {
     do {
         Client clientEp = check new ("http://localhost:9090", interceptFunc = interceptFunc);
-        Message msg = check clientEp->get("/get");
+        Message msg = check clientEp->/get;
         test:assertEquals(msg.code, 200, "Status code should be 200");
         test:assertEquals(msg.message, "test", "Response message should be 'test'");
     } on fail error e {
